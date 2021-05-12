@@ -41,10 +41,10 @@ using FilteredFullCollision = soa::Filtered<soa::Join<aod::Collisions,
                                                       aod::Mults>>::iterator;
 using FilteredFullTracks = soa::Filtered<soa::Join<aod::FullTracks,
                                                    aod::TracksExtended,
-                                                   aod::pidRespTPCEl, aod::pidRespTPCMu, aod::pidRespTPCPi,
-                                                   aod::pidRespTPCKa, aod::pidRespTPCPr, aod::pidRespTPCDe,
-                                                   aod::pidRespTOFEl, aod::pidRespTOFMu, aod::pidRespTOFPi,
-                                                   aod::pidRespTOFKa, aod::pidRespTOFPr, aod::pidRespTOFDe>>;
+                                                   aod::pidTPCEl, aod::pidTPCMu, aod::pidTPCPi,
+                                                   aod::pidTPCKa, aod::pidTPCPr, aod::pidTPCDe,
+                                                   aod::pidTOFEl, aod::pidTOFMu, aod::pidTOFPi,
+                                                   aod::pidTOFKa, aod::pidTOFPr, aod::pidTOFDe>>;
 } // namespace aod
 } // namespace o2
 
