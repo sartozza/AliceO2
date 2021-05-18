@@ -64,11 +64,25 @@ class FemtoDreamContainer
   //  static float getkstar(const ROOT::Math::PtEtaPhiMVector& part1, const ROOT::Math::PtEtaPhiMVector& part2);
   static float getkstar(const TLorentzVector& part1, const TLorentzVector& part2);
 
- protected:
-  Observable mFemtoObs = Observable::kstar;
+  /// constructor for kT calculation:
+  /// implemented to have as arguments some particle objects T or TLorenzVector
+ template <typename T>
+ static float getkT(const T& part1, const float mass1, const T& part2, const float mass2)
+ {
+   TLorentzVector vecpart1, vecpart2;
+   vecpart1.SetXYZM(part1.pt(), part1.eta(), part1.phi(), mass1);
+   vecpart2.SetXYZM(part2.pt(), part2.eta(), part2.phi(), mass2);
+   return getkT(vecpart1, vecpart2);
+ }
+ /// \todo improve performance of the computation by replacing TLorentzVector
+ //  static float getkT(const ROOT::Math::PtEtaPhiMVector& part1, const ROOT::Math::PtEtaPhiMVector& part2);
+ static float getkT(const TLorentzVector& part1, const TLorentzVector& part2);
 
-  float mMassOne = 0.f;
-  float mMassTwo = 0.f;
+protected:
+ Observable mFemtoObs = Observable::kstar;
+
+ float mMassOne = 0.f;
+ float mMassTwo = 0.f;
 };
 
 void FemtoDreamContainer::init(o2::framework::HistogramRegistry* registry, Observable obs)
@@ -78,16 +92,20 @@ void FemtoDreamContainer::init(o2::framework::HistogramRegistry* registry, Obser
     femtoObs = "#it{k}^{*} (GeV/#it{c})";
   }
   registry->add("relPairDist", ("; " + femtoObs + "; Entries").c_str(), o2::framework::kTH1F, {{5000, 0, 5}});
+  registry->add("relPairkT", "; #it{k}_{T} (GeV/#it{c}); Entries", o2::framework::kTH1F, {{5000, 0, 5}});
 }
 
 template <typename T>
 inline void FemtoDreamContainer::setPair(o2::framework::HistogramRegistry* registry, T& part1, T& part2)
 {
   float femtoObs;
+  float femtokT;
   if (mFemtoObs == Observable::kstar) {
     femtoObs = getkstar(part1, mMassOne, part2, mMassTwo);
+    femtokT = getkT(part1, mMassOne, part2, mMassTwo);
   }
   registry->fill(HIST("relPairDist"), femtoObs);
+  registry->fill(HIST("relPairkT"), femtokT);
 }
 
 //inline float FemtoDreamContainer::getkstar(const ROOT::Math::PtEtaPhiMVector& part1, const ROOT::Math::PtEtaPhiMVector& part2)
@@ -109,6 +127,14 @@ inline float FemtoDreamContainer::getkstar(const TLorentzVector& part1, const TL
   TLorentzVector trackRelK = PartOneCMS - PartTwoCMS;
 
   return 0.5 * trackRelK.P();
+}
+
+inline float FemtoDreamContainer::getkT(const TLorentzVector& part1, const TLorentzVector& part2)
+{
+  TLorentzVector trackSum = part1 + part2;
+  float trackRelkT = 0.;
+  trackRelkT = 0.5 * trackSum.Pt();
+  return trackRelkT;
 }
 
 } /* namespace femtoDream */
