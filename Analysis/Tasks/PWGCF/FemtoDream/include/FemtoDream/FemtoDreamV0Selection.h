@@ -52,15 +52,6 @@ class FemtoDreamV0Selection : public FemtoDreamObjectSelection<float, femtoDream
   /// Initializes histograms for the task
   void init(HistogramRegistry* registry);
 
-  template <typename T>
-  void setPIDSpecies(T& pids) ///K0s,Λ and antiΛ
-  {
-    std::vector<int> tmpPids = pids; // necessary due to some features of the configurable
-    for (const o2::track::PID& pid : tmpPids) {
-      mPIDspecies.push_back(pid);
-    }
-  }
-
   template <typename C, typename V, typename T>
   bool isSelectedMinimal(C const& col, V const& v0, T const& posTrack, T const& negTrack);
 
@@ -82,7 +73,6 @@ class FemtoDreamV0Selection : public FemtoDreamObjectSelection<float, femtoDream
  private:
   FemtoDreamTrackSelection PosDaughTrack;
   FemtoDreamTrackSelection NegDaughTrack;
-  std::vector<o2::track::PID> mPIDspecies;
 
   ClassDefNV(FemtoDreamV0Selection, 1);
 }; // namespace femtoDream
@@ -91,10 +81,10 @@ void FemtoDreamV0Selection::init(HistogramRegistry* registry)
 {
   if (registry) {
     mHistogramRegistry = registry;
-    fillSelectionHistogram("V0Cuts/cuthist"); ///For now empty since I need to understand the next nSelections
+    fillSelectionHistogram("V0Cuts/cuthist");
 
     /// \todo this should be an automatic check in the parent class, and the return type should be templated
-    int nSelections = 2 + getNSelections(); /// the 2 still holds for the first two bits???
+    int nSelections = getNSelections();
     if (8 * sizeof(uint64_t) < nSelections) {
       LOGF(error, "Number of selections to large for your container - quitting!");
     }

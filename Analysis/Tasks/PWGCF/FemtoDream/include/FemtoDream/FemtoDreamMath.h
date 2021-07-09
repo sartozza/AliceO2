@@ -33,7 +33,6 @@ namespace femtoDream
 class FemtoDreamMath
 {
  public:
-
   template <typename T>
   static float getkstar(const T& part1, const float mass1, const T& part2, const float mass2)
   {
