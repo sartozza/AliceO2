@@ -58,6 +58,7 @@ class FemtoDreamContainer
     mHistogramRegistry->add("relPairkstarkT", ("; " + femtoObs + "; #it{k}_{T} (GeV/#it{c})").c_str(), o2::framework::kTH2F, {femtoObsAxis, kTAxis});
     mHistogramRegistry->add("relPairkstarmT", ("; " + femtoObs + "; #it{m}_{T} (GeV/#it{c}^{2})").c_str(), o2::framework::kTH2F, {femtoObsAxis, mTAxis});
     mHistogramRegistry->add("relPairkstarMult", ("; " + femtoObs + "; Multiplicity").c_str(), o2::framework::kTH2F, {femtoObsAxis, multAxis});
+    mHistogramRegistry->add("DEtaDPhiAvgStar", "; #Delta#it{#eta}; <#Delta#it{#phi*}", o2::framework::kTH2F, {{400,-0.2,0.2}, {300,-0.15,0.15}});
   }
 
   void setPDGCodes(const int pdg1, const int pdg2)
@@ -82,6 +83,22 @@ class FemtoDreamContainer
       mHistogramRegistry->fill(HIST("relPairkstarkT"), femtoObs, kT);
       mHistogramRegistry->fill(HIST("relPairkstarmT"), femtoObs, mT);
       mHistogramRegistry->fill(HIST("relPairkstarMult"), femtoObs, mult);
+    }
+  }
+
+  template <typename T, typename F>
+  void setDetaDphiStarHistos(T const& part1, T const& part2, const float magfield, F const& RadiiTPC) {
+    //Should be work in principle both for SE and ME
+    std::vector<float> vecPhiPart1;
+    std::vector<float> vecPhiPart2;
+    std::vector<double> tmpVecRadii = RadiiTPC;
+    PhiAtRadiiTPC(part1, magfield, tmpVecRadii, vecPhiPart1);
+    PhiAtRadiiTPC(part2, magfield, tmpVecRadii, vecPhiPart2);
+    float AvgPhiStar = AveragePhiStar(vecPhiPart1, vecPhiPart2);
+    float deltaeta = DeltaEta(part1, part2);
+
+    if(mHistogramRegistry) {
+      mHistogramRegistry->fill(HIST("DEtaDPhiAvgStar"), deltaeta, AvgPhiStar);
     }
   }
 
