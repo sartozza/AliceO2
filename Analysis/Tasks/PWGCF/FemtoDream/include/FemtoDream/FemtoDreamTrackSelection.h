@@ -55,7 +55,7 @@ class FemtoDreamTrackSelection : public FemtoDreamObjectSelection<float, femtoDr
   /// \tparam cutContainerType Data type of the bit-wise container for the selections
   /// \param registry HistogramRegistry for QA output
   template <o2::aod::femtodreamparticle::ParticleType part, typename cutContainerType>
-  void init(HistogramRegistry* registry);
+  void init(HistogramRegistry* registry, const std::string WhichDaugh = "");
 
   /// Passes the species to the task for which PID needs to be stored
   /// \tparam T Data type of the configurable passed to the functions
@@ -106,7 +106,7 @@ class FemtoDreamTrackSelection : public FemtoDreamObjectSelection<float, femtoDr
   /// \tparam T Data type of the track
   /// \param track Track
   template <o2::aod::femtodreamparticle::ParticleType part, typename T>
-  void fillQA(T const& track);
+  void fillQA(T const& track, const std::string WhichDaugh = "");
 
   /// Helper function to obtain the name of a given selection criterion for consistent naming of the configurables
   /// \param iSel Track selection variable to be examined
@@ -159,11 +159,18 @@ class FemtoDreamTrackSelection : public FemtoDreamObjectSelection<float, femtoDr
 };                                                                                   // namespace femtoDream
 
 template <o2::aod::femtodreamparticle::ParticleType part, typename cutContainerType>
-void FemtoDreamTrackSelection::init(HistogramRegistry* registry)
+void FemtoDreamTrackSelection::init(HistogramRegistry* registry, const std::string WhichDaugh)
 {
   if (registry) {
     mHistogramRegistry = registry;
-    fillSelectionHistogram<part>();
+    std::string folderName;
+    if (WhichDaugh.empty()) {
+      fillSelectionHistogram<part>();
+      folderName = static_cast<std::string>(o2::aod::femtodreamparticle::ParticleTypeName[part]);
+    } else {
+      printf("Are you working on Daughters? Not filling the selection criteria histogram!");
+      folderName = static_cast<std::string>(o2::aod::femtodreamparticle::ParticleTypeName[part]) + "/" + WhichDaugh;
+    }
 
     /// \todo this should be an automatic check in the parent class
     int nSelections = getNSelections() + mPIDspecies.size() * (getNSelections(femtoDreamTrackSelection::kPIDnSigmaMax) - 1);
@@ -171,7 +178,6 @@ void FemtoDreamTrackSelection::init(HistogramRegistry* registry)
       LOG(FATAL) << "FemtoDreamTrackCuts: Number of selections to large for your container - quitting!";
     }
 
-    std::string folderName = static_cast<std::string>(o2::aod::femtodreamparticle::ParticleTypeName[part]);
     mHistogramRegistry->add((folderName + "/pThist").c_str(), "; #it{p}_{T} (GeV/#it{c}); Entries", kTH1F, {{1000, 0, 10}});
     mHistogramRegistry->add((folderName + "/etahist").c_str(), "; #eta; Entries", kTH1F, {{1000, -1, 1}});
     mHistogramRegistry->add((folderName + "/phihist").c_str(), "; #phi; Entries", kTH1F, {{1000, 0, 2. * M_PI}});
@@ -292,36 +298,56 @@ bool FemtoDreamTrackSelection::isSelectedMinimal(T const& track)
   const static float dcaMin = getMinimalSelection(femtoDreamTrackSelection::kDCAMin, femtoDreamSelection::kAbsLowerLimit);
   const static float nSigmaPIDMax = getMinimalSelection(femtoDreamTrackSelection::kPIDnSigmaMax, femtoDreamSelection::kAbsUpperLimit);
 
+  // printf("nPtMinSel > 0 ? %i --- pT < pTMin(%.2f) ? %.2f\n", nPtMinSel, pTMin, pT);
   if (nPtMinSel > 0 && pT < pTMin) {
+    // printf("nPtMinSel false\n");
     return false;
   }
   if (nPtMaxSel > 0 && pT > pTMax) {
+    // printf("nPtMaxSel false\n");
     return false;
   }
+  // printf("nEtaSel > 0 ? %i --- eta > etaMax(%.2f) ? %.2f\n", nEtaSel, etaMax, std::abs(eta));
   if (nEtaSel > 0 && std::abs(eta) > etaMax) {
+    // printf("nEtaSel false\n");
     return false;
   }
+  // printf("nTPCnMinSel > 0 ? %i --- tpcNClsF < nClsMin(%.2f) ? %.2f\n", nTPCnMinSel, nClsMin, tpcNClsF);
   if (nTPCnMinSel > 0 && tpcNClsF < nClsMin) {
+    // printf("nTPCnMinSel false\n");
     return false;
   }
+  // printf("nTPCfMinSel > 0 ? %i --- tpcRClsC < fClsMin(%.2f) ? %.2f\n", nTPCfMinSel, fClsMin, tpcRClsC);
   if (nTPCfMinSel > 0 && tpcRClsC < fClsMin) {
+    // printf("nTPCfMinSel false\n");
     return false;
   }
+  // printf("nTPCcMinSel > 0 ? %i --- tpcNClsC < cTPCMin(%.2f) ? %.2f\n", nTPCcMinSel, cTPCMin, tpcNClsC);
   if (nTPCcMinSel > 0 && tpcNClsC < cTPCMin) {
+    // printf("nTPCcMinSel false\n");
     return false;
   }
+  // printf("nTPCsMaxSel > 0 ? %i --- tpcNClsS > sTPCMax(%.2f) ? %.2f\n", nTPCsMaxSel, sTPCMax, tpcNClsS);
   if (nTPCsMaxSel > 0 && tpcNClsS > sTPCMax) {
+    // printf("nTPCsMaxSel false\n");
     return false;
   }
+  // printf("nDCAxyMaxSel > 0 ? %i --- std::abs(dcaXY) > dcaXYMax(%.2f) ? %.2f\n", nDCAxyMaxSel, dcaXYMax, std::abs(dcaXY));
   if (nDCAxyMaxSel > 0 && std::abs(dcaXY) > dcaXYMax) {
+    // printf("nDCAxyMaxSel false\n");
     return false;
   }
+  // printf("nDCAzMaxSel > 0 ? %i --- std::abs(dcaZ) > dcaZMax(%.2f) ? %.2f\n", nDCAzMaxSel, dcaZMax, std::abs(dcaZ));
   if (nDCAzMaxSel > 0 && std::abs(dcaZ) > dcaZMax) {
+    // printf("nDCAzMaxSel false\n");
     return false;
   }
+  // printf("nDCAMinSel > 0 ? %i --- std::abs(dca) < dcaMin(%.2f) ? %.2f\n", nDCAMinSel, dcaMin, std::abs(dca));
   if (nDCAMinSel > 0 && std::abs(dca) < dcaMin) {
+    // printf("nDCAMinSel false\n");
     return false;
   }
+  // printf("nPIDnSigmaSel > 0 ? %i\n", nPIDnSigmaSel);
   if (nPIDnSigmaSel > 0) {
     bool isFulfilled = false;
     for (size_t i = 0; i < pidTPC.size(); ++i) {
@@ -329,10 +355,12 @@ bool FemtoDreamTrackSelection::isSelectedMinimal(T const& track)
       auto pidTOFVal = pidTOF.at(i);
       auto pidComb = std::sqrt(pidTPCVal * pidTPCVal + pidTOFVal * pidTOFVal);
       if (std::abs(pidTPCVal) < nSigmaPIDMax || pidComb < nSigmaPIDMax) {
+        // printf("isFulfilled true\n");
         isFulfilled = true;
       }
     }
     if (!isFulfilled) {
+      // printf("isFulfilled ? %i\n", isFulfilled);
       return isFulfilled;
     }
   }
@@ -420,7 +448,7 @@ std::array<cutContainerType, 2> FemtoDreamTrackSelection::getCutContainer(T cons
 }
 
 template <o2::aod::femtodreamparticle::ParticleType part, typename T>
-void FemtoDreamTrackSelection::fillQA(T const& track)
+void FemtoDreamTrackSelection::fillQA(T const& track, const std::string WhichDaugh)
 {
   if (mHistogramRegistry) {
     mHistogramRegistry->fill(HIST(o2::aod::femtodreamparticle::ParticleTypeName[part]) + HIST("/pThist"), track.pt());
